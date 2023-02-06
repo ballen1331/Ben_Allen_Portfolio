@@ -1,6 +1,6 @@
 # Handwriting Recognition in R (kNN, SVM, and Random Forest Modeling)
 
-## This project was completed for the graduate Data Science class - "Applied Machine Learning"
+## This project was completed for the graduate data science class - "Applied Machine Learning"
 
 ### A few notes about the project:
 
