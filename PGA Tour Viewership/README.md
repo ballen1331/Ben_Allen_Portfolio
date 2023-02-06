@@ -4,11 +4,11 @@
 
 ### A few notes about the data
 
-•Includes data from 45 PGA Tour tournaments from 2018-2022 with attributes like Final Round TV rating, Lead Margin Before / End of R4, Tiger Woods Made Cut / Top 10, etc. 
+•Includes data from 45 PGA Tour tournaments from 2018-2022 with attributes like Final Round TV rating, Lead Margin Before / End of R4, Tiger Woods Made Cut / Top 10, and others in an attempt to quantfify the factors that influence modern PGA Tour viewership
 
-•Average Final Round TV Rating was used as a dependent variable against a variety of player effect, tournament effect, and uncertainty of outcome predictors
+•Average Final Round TV Rating was used as a dependent variable against a variety of player effects, tournament effects, and uncertainty of outcome predictors
 
-•
+•Player effects include
 
 ### A few notes about the model results
 
