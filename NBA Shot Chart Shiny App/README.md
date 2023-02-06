@@ -1,6 +1,6 @@
 # NBA Shot Chart Shiny App
 
-## This project was completed with Daniel Beim as a final assessment for the Syracuse University undergraduate class "R for Sport Analytics"
+## This project was completed with classmate Daniel Beim as a final assessment for the Syracuse University undergraduate class "R for Sport Analytics"
 
 ### A few notes about the data:
 
