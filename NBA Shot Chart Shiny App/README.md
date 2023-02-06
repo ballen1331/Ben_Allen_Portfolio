@@ -14,4 +14,5 @@
 
 ### A few notes about the app:
 
-• A link to the app is here: NBA Player Shots By Season (shinyapps.io)
+• A link to the app is here: (https://danielbeim.shinyapps.io/SAL413FinalProject/)
+
