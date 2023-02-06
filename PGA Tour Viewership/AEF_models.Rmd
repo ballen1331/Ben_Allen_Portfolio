@@ -7,10 +7,6 @@ output: html_document
 library(tidyverse)
 library(ggplot2)
 library(car)
-
-#install.packages("car")
-
-library(car)
 library(stargazer)
 ```
 
@@ -38,7 +34,7 @@ summary(model_1)
 vif(model_1)
 #No multicollinearity for all but tournament effects
 
-stargazer(model_1, title = "Model 1: All Attributes", type = "html", out = "Model1.html")
+#stargazer(model_1, title = "Model 1: All Attributes", type = "html", out = "Model1.html")
 ```
 
 
@@ -55,16 +51,16 @@ vif(model_2)
 
 #no multi, even for tournament effects
 
-stargazer(model_2, title = "Model 2: Refined Attributes", type = "html", out = "Model2.html")
+#stargazer(model_2, title = "Model 2: Refined Attributes", type = "html", out = "Model2.html")
 ```
 
 
 ```{r}
 #Taking out starcount entirely 
-model_3 <- lm(formula = FinalRoundAvgViewers ~ year + tournament + Playoff + LeaderMarginEnteringFinalRound + LeaderMarginEnd + TigerMakeCut + TigerTop10, data = test)
+model_3 <- lm(formula = FinalRoundAvgViewers ~ year + tournament + Playoff + LeaderMarginEnteringFinalRound + LeaderMarginEnd + TigerMakeCut + TigerTop10, data = tourney)
 
 summary(model_3)
-#Not useful
+#Not useful as StarPower does have some effect in reducing endogeneity, refined model 2 is best
 ```
 
 
