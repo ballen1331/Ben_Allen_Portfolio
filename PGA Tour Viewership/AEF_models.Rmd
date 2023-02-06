@@ -1,0 +1,71 @@
+---
+title: "AEF"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(car)
+
+#install.packages("car")
+
+library(car)
+library(stargazer)
+```
+
+```{r}
+tourney <- read_csv("final_tournament_data.csv")
+
+tourney
+
+str(tourney)
+```
+
+```{r}
+#Looking at summary stats
+summary <- sapply(tourney, mean, na.rm = TRUE)
+summary
+```
+
+```{r}
+model_1 <- lm(formula = FinalRoundAvgViewers ~ year + tournament + Playoff + LeaderMarginEnteringFinalRound + LeaderMarginEnd + TigerMakeCut + TigerTop10 + PhilTop10 + 
+                RoryTop10 + SpiethTop10 + BrysonTop10 + ThomasTop10, data = tourney)
+
+summary(model_1)
+#model significant with low p-value, Major's are significant, UOO variables are close, but the individual player variables are insignificant for all but Tiger. 
+
+vif(model_1)
+#No multicollinearity for all but tournament effects
+
+stargazer(model_1, title = "Model 1: All Attributes", type = "html", out = "Model1.html")
+```
+
+
+```{r}
+#Let's now try a similar model, but replace the insigificant player effects with a combined
+#count that adds up the 6 players
+model_2 <- lm(formula = FinalRoundAvgViewers ~ year + tournament + Playoff + LeaderMarginEnteringFinalRound + LeaderMarginEnd + TigerMakeCut + TigerTop10 + StarTop10Count, data = tourney)
+
+summary(model_2)
+#This is better, significant for majors (especially Masters), Tiger making cut for viewership during
+#early rounds, then fairly significant for Margin end of round, which supports UOO
+
+vif(model_2)
+
+#no multi, even for tournament effects
+
+stargazer(model_2, title = "Model 2: Refined Attributes", type = "html", out = "Model2.html")
+```
+
+
+```{r}
+#Taking out starcount entirely 
+model_3 <- lm(formula = FinalRoundAvgViewers ~ year + tournament + Playoff + LeaderMarginEnteringFinalRound + LeaderMarginEnd + TigerMakeCut + TigerTop10, data = test)
+
+summary(model_3)
+#Not useful
+```
+
+
+
