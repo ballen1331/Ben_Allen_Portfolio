@@ -1,0 +1,118 @@
+---
+title: "CodeUpdated"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+
+read_csv("Catching_Report_Sample_Data.csv") -> Data
+
+Data %>% filter(PitchCall == "BallCalled" | PitchCall == "StrikeCalled") -> CalledPitches
+
+CalledPitches$isBall <- ifelse(CalledPitches$PlateLocHeight > 3.6 | CalledPitches$PlateLocHeight < 1.5 | CalledPitches$PlateLocSide > .86 | CalledPitches$PlateLocSide < -.86, 1,0)
+  #Pitch is a ball given these location conditions
+
+CalledPitches$isStrike <- 1-CalledPitches$isBall
+```
+
+
+```{r}
+#Called Pitches Visual (Called strikes/balls vs whether they were actually strikes/balls)
+ggplot(CalledPitches, aes(x = PlateLocSide, y = PlateLocHeight, color = as.character(isStrike), shape = PitchCall)) + geom_point() + coord_fixed() + annotate(geom = "rect", xmin = -.83, xmax = .83, ymin = 1.5, ymax = 3.6, linetype = "dashed", fill = "NA", color = "black") + labs(shape = "Pitch Call",color= "In Zone?") + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + xlim(-2.2,2.2) + ylim(-0.5,4.3) + ggtitle("Called Pitches")-> ActualStrike
+
+CalledPitches$CalledStrike <- ifelse(CalledPitches$PitchCall == "StrikeCalled",1,0) 
+CalledPitches$Pitch <- 1
+
+calledStrikeModel <- glm(CalledStrike ~ PlateLocSide + PlateLocHeight + I(PlateLocSide^2) + I(PlateLocHeight^2) + I(PlateLocSide*PlateLocHeight), data = CalledPitches, family = "binomial")
+predict(calledStrikeModel, CalledPitches, type = "response") -> CalledPitches$StrikeProb
+
+#Upon creating Strike Prob model with linear and polynomial instances of LocSide & LocHeight, we can use the predict function to give us Strike Probabilities for every Called Pitch...We can now see these values in the rightmost column
+```
+
+```{r}
+#Strike Prob Visual & Table Setup
+ggplot(CalledPitches, aes(x = PlateLocSide, y = PlateLocHeight, color = StrikeProb)) + geom_point() + coord_fixed() +annotate(geom = "rect", xmin = -.83, xmax = .83, ymin = 1.5, ymax = 3.6,linetype = "dashed", fill = "NA", color = "black")+ labs(color = "Strike Probability") + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + xlim(-2.2,2.2) + ylim(-0.5,4.3) + ggtitle("Strike Probability on Called Pitches")-> PredictedStrike
+
+#Calculating Strikes Gained (From Predicted Strikes) and creating subsequent table
+CalledPitches %>% group_by(Catcher) %>% summarise(TotalChances = sum(Pitch), PredStrikes = round(sum(StrikeProb, na.rm = TRUE),1), CalledStrikes = sum(CalledStrike), StrikesGained = CalledStrikes -PredStrikes) -> StrikesGainedPred
+
+ggtexttable(StrikesGainedPred, rows = NULL)  %>% tab_add_title(text = "Using Predicted Strike Zone", face = "bold") %>% tbody_add_border() -> ProjPlot
+
+#Calculating Strikes Gained (From Real Strikes) and creating subsequent table
+CalledPitches %>% group_by(Catcher) %>% summarise(TotalChances = sum(Pitch), RealStrikes = sum(isStrike, na.rm = TRUE), CalledStrikes = sum(CalledStrike), StrikesGained = CalledStrikes -RealStrikes) -> StrikesGainedReal
+
+ggtexttable(StrikesGainedReal, rows = NULL) %>% tab_add_title(text = "Using Real Strike Zone", face = "bold") %>% tbody_add_border() -> RealPlot
+```
+
+
+```{r}
+#Strike Prob Visuals & Table Setup (Same strike zone code)
+ggplot(CalledPitches, aes(x = PlateLocSide, y = PlateLocHeight, color = StrikeProb)) + geom_point() + coord_fixed() +annotate(geom = "rect", xmin = -.83, xmax = .83, ymin = 1.5, ymax = 3.6,linetype = "dashed", fill = "NA", color = "black")+ labs(color = "Strike Probability") + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + xlim(-2.2,2.2) + ylim(-0.5,4.3) + ggtitle("Strike Probability on Called Pitches")-> PredictedStrike
+
+CalledPitches %>% group_by(Catcher) %>% summarise(TotalChances = sum(Pitch), PredStrikes = round(sum(StrikeProb, na.rm = TRUE),1), CalledStrikes = sum(CalledStrike), StrikesGained = CalledStrikes -PredStrikes) -> StrikesGainedPred
+
+ggtexttable(StrikesGainedPred, rows = NULL)  %>% tab_add_title(text = "Using Predicted Strike Zone", face = "bold") %>% tbody_add_border() -> ProjPlot
+
+CalledPitches %>% group_by(Catcher) %>% summarise(TotalChances = sum(Pitch), RealStrikes = sum(isStrike, na.rm = TRUE), CalledStrikes = sum(CalledStrike), StrikesGained = CalledStrikes -RealStrikes) -> StrikesGainedReal
+
+ggtexttable(StrikesGainedReal, rows = NULL) %>% tab_add_title(text = "Using Real Strike Zone", face = "bold") %>% tbody_add_border() -> RealPlot
+
+```
+
+```{r}
+#Called Pitches/Strikes Gained Plot and Setup
+CalledPitches$Residual <- CalledPitches$CalledStrike - CalledPitches$StrikeProb
+
+CalledPitches %>% filter(Catcher == "Selden, Jacob") -> Catcher1
+
+ggplot(CalledPitches, aes(x = PlateLocSide, y = PlateLocHeight, color = Residual, shape = PitchCall)) + geom_point(size = 3)+ coord_fixed() + annotate(geom = "rect", xmin = -.83, xmax = .83, ymin = 1.5, ymax = 3.6,linetype = "dashed", fill = "NA", color = "black") + scale_color_gradient2(low = muted("red"), mid = "grey", high = muted("dark green"), midpoint = 0) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + ggtitle("VCU Team Called Pitches") + labs(color = "Strikes Gained") -> FramePlot
+
+ggplot(CalledPitches %>% filter(Catcher == "Ericsson, Nic"), aes(x = PlateLocSide, y = PlateLocHeight, color = Residual, shape = PitchCall)) + geom_point(size = 3)+ coord_fixed() + annotate(geom = "rect", xmin = -.83, xmax = .83, ymin = 1.5, ymax = 3.6,linetype = "dashed", fill = "NA", color = "black") + scale_color_gradient2(low = muted("red"), mid = "grey", high = muted("dark green"), midpoint = 0) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + ggtitle("Nic Ericsson Called Pitches") + labs(color = "Strikes Gained") + xlim(-2.2,2.2) + ylim(-0.5,4.3)-> FramePlot2
+
+ggplot(CalledPitches %>% filter(Catcher == "Selden, Jacob"), aes(x = PlateLocSide, y = PlateLocHeight, color = Residual, shape = PitchCall)) + geom_point(size = 3)+ coord_fixed() + annotate(geom = "rect", xmin = -.83, xmax = .83, ymin = 1.5, ymax = 3.6,linetype = "dashed", fill = "NA", color = "black") + scale_color_gradient2(low = muted("red"), mid = "grey", high = muted("dark green"), midpoint = 0) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + ggtitle("Jacob Selden Called Pitches") + labs(color = "Strikes Gained") + xlim(-2.2,2.2) + ylim(-0.5,4.3)-> FramePlot3
+
+ggplot(CalledPitches %>% filter(Catcher == "Roney, Brendan"), aes(x = PlateLocSide, y = PlateLocHeight, color = Residual, shape = PitchCall)) + geom_point(size = 3)+ coord_fixed() + annotate(geom = "rect", xmin = -.83, xmax = .83, ymin = 1.5, ymax = 3.6,linetype = "dashed", fill = "NA", color = "black") + scale_color_gradient2(low = muted("red"), mid = "grey", high = muted("dark green"), midpoint = 0) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + ggtitle("Brendan Roney Called Pitches") + labs(color = "Strikes Gained") + xlim(-2.2,2.2) + ylim(-0.5,4.3)-> FramePlot4
+
+ggplot(CalledPitches %>% filter(Catcher == "Gibbs, Casey"), aes(x = PlateLocSide, y = PlateLocHeight, color = Residual, shape = PitchCall)) + geom_point(size = 3)+ coord_fixed() + annotate(geom = "rect", xmin = -.83, xmax = .83, ymin = 1.5, ymax = 3.6,linetype = "dashed", fill = "NA", color = "black") + scale_color_gradient2(low = muted("red"), mid = "grey", high = muted("dark green"), midpoint = 0) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + ggtitle("Casey Gibbs Called Pitches") + labs(color = "Strikes Gained") + xlim(-2.2,2.2) + ylim(-0.5,4.3)-> FramePlot5
+
+ggplot(CalledPitches %>% filter(Catcher == "Coy, Tyler"), aes(x = PlateLocSide, y = PlateLocHeight, color = Residual, shape = PitchCall)) + geom_point(size = 3)+ coord_fixed() + annotate(geom = "rect", xmin = -.83, xmax = .83, ymin = 1.5, ymax = 3.6,linetype = "dashed", fill = "NA", color = "black") + scale_color_gradient2(low = muted("red"), mid = "grey", high = muted("dark green"), midpoint = 0) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + ggtitle("Tyler Coy Called Pitches") + labs(color = "Strikes Gained") + xlim(-2.2,2.2) + ylim(-0.5,4.3)-> FramePlot6
+```
+
+```{r}
+#Catcher Throws filtering
+CatcherThrows <- Data %>% select(Catcher, ThrowSpeed, PopTime, ExchangeTime, TimeToBase)
+CatcherThrows$Throw <- ifelse(is.na(CatcherThrows$PopTime),0,1)
+CatcherThrows %>% filter(Throw == 1) %>% select(-Throw)-> CatcherThrows
+CatcherThrows$ThrowSpeed <- round(CatcherThrows$ThrowSpeed,1)
+CatcherThrows$PopTime <- round(CatcherThrows$PopTime,2)
+CatcherThrows$ExchangeTime <- round(CatcherThrows$ExchangeTime,2)
+CatcherThrows$TimeToBase<- round(CatcherThrows$TimeToBase,2)
+CatcherThrows$ThrowSpeed -> CatcherThrows$`ThrowSpeed(mph)`
+CatcherThrows %>% select(-ThrowSpeed) -> CatcherThrows
+
+
+ggtexttable(CatcherThrows, rows = NULL) %>% tab_add_title(text = "Catcher Throws", face = "bold") %>% tbody_add_border() -> CatcherTable
+
+plot_grid(RealPlot,NULL, ProjPlot,  NULL, CatcherTable, nrow = 5, ncol = 1, rel_heights = c(1,0,1,0,1)) -> Tables
+
+plot_grid(FramePlot, nrow = 1, ncol = 1) -> Page1
+
+plot_grid(FramePlot2, FramePlot3, nrow = 2, ncol = 1) -> Page2
+
+plot_grid(FramePlot4, FramePlot5, nrow = 2, ncol = 1) -> Page3
+
+plot_grid(FramePlot6, nrow = 1, ncol = 1) -> Page4
+
+plot_grid(ActualStrike, PredictedStrike, nrow = 1, ncol = 2) -> StrikeZones
+
+#Catch Throws Visual
+ggplot(CatcherThrows, aes(x = TimeToBase, y = ExchangeTime, color = `ThrowSpeed(mph)`, shape = Catcher)) + geom_point(size = 5)+ scale_color_gradient2(low = muted("darkblue"), mid = "grey", high = muted("red"), midpoint = 70) + ggtitle("Catcher Throws (Time to Base + Exchange Time = Pop Time)") + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) -> CatcherThrowPlot
+
+```
+
