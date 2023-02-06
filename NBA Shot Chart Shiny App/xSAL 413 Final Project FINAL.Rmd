@@ -1,0 +1,165 @@
+---
+title: "SAL 413 Final Project FINAL"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(shiny)
+library(plotly)
+library(tm)
+```
+
+```{r}
+devtools::install_github("abresler/nbastatR", force = T)
+library(nbastatR)
+Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
+nba_teams() %>% filter(isNonNBATeam == 0)  ->  NBAteams
+
+#Pulling from nbastatR
+```
+
+```{r}
+teams_shots(teams = c("Golden State Warriors","Phoenix Suns", "Los Angeles Lakers", "Sacramento Kings", "Los Angeles Clippers"), 
+seasons = 2018) -> Pacific2018
+
+teams_shots(teams = c("Golden State Warriors","Phoenix Suns", "Los Angeles Lakers", "Sacramento Kings", "Los Angeles Clippers"),
+seasons = 2019) -> Pacific2019
+
+teams_shots(teams = c("Golden State Warriors","Phoenix Suns", "Los Angeles Lakers", "Sacramento Kings", "Los Angeles Clippers"),
+seasons = 2020) -> Pacific2020
+
+#cutting the data down to only 1 division, so it can fit in Shiny, while still 
+#showing trends over 3 seasons
+```
+
+
+```{r}
+#Cleaning data
+Pacific2018 %>% bind_rows(Pacific2019) %>% bind_rows(Pacific2020) -> PacificShots
+
+PacificShots$typeShotAction <- paste(PacificShots$typeShot,PacificShots$typeAction)
+
+#PacificShots should have 103417 obs
+
+stopwords = c("Field Goal")
+
+x = PacificShots$typeShotAction
+
+x = removeWords(x, stopwords)
+
+PacificShots$typeShotAction_new <- x
+
+#removing unnecessary words from shot action variable
+```
+
+
+```{r}
+#str(PacificShots)
+#Changing location variable to fit scale
+
+PacificShots$locationX_new <- (PacificShots$locationX / 10)
+  
+PacificShots$locationY_new <- (PacificShots$locationY / 10)
+
+write.csv(PacificShots, file = "PacificShots2.csv")
+
+#PacificShots2 is the data used in our shiny app
+```
+
+
+```{r}
+PacificShots <- read_csv("PacificShots2.csv")
+```
+
+```{r}
+PacificShots$yearSeason <- as.character(PacificShots$yearSeason)
+```
+
+```{r}
+source("helpers.R")
+#functionality to create court
+PacificShots %>% group_by(namePlayer) %>% summarise(n()) -> PacificShots_player
+gg_court <- make_court()
+gg_court
+#reading in helper file
+```
+
+```{r}
+PacificShots %>% group_by(namePlayer) %>% summarise(n()) -> PacificShots_player
+PacificShots_player <-  PacificShots_player %>% filter(`n()` >= 100)
+
+
+top5shots <- PacificShots %>% filter(typeShotAction_new == "3PT  Jump Shot" | typeShotAction_new == "2PT  Driving Layup Shot" | typeShotAction_new ==  "2PT  Pullup Jump shot" | typeShotAction_new ==  "2PT  Dunk Shot" | typeShotAction_new == "2PT  Floating Jump shot")
+#Separates 3rd barplot into just these 5 shot types
+
+
+PacificShots %>% group_by(typeShotAction_new) %>% summarise(n()) -> PacificShots_type
+```
+
+```{r}
+#Shiny App starts
+ui <- fluidPage(
+  titlePanel("NBA Player Shots By Season"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      selectizeInput("player_select", label = h3("Select Player"), choices = NULL)
+    ),
+    mainPanel(
+      plotOutput("court_shots"),
+      uiOutput("season_choice"),
+      plotlyOutput("boxplot"),
+      plotlyOutput("barchart")
+    )
+  )
+)
+#3 output plots that react to our name input
+server <- function(input, output, session) {
+    updateSelectizeInput(session, "player_select", choices = PacificShots_player$namePlayer,
+                       server = TRUE)
+  SelectedPlayerReactive <- reactive({
+    PacificShots %>% filter(namePlayer == input$player_select)
+    PacificShots %>% filter(yearSeason == input$season_choice)
+  })
+  output$season_choice <- renderUI({
+    seasons = PacificShots %>% filter(namePlayer == input$player_select) %>%
+      distinct(yearSeason) %>% pull()
+    selectizeInput("season_choice", label = h3("Select Season(s)"), choices = seasons,
+                   selected = seasons[1], multiple = TRUE)
+  })
+  output$court_shots <- renderPlot({
+    PacificShots <- SelectedPlayerReactive()
+    PacificShots <- filter(PacificShots, namePlayer == input$player_select,
+                         yearSeason %in% input$season_choice)
+    gg_court + geom_point(data = PacificShots, alpha = 0.75, size = 2.5,
+                          aes(locationX_new, locationY_new, color = typeEvent, shape = yearSeason)) +
+                          scale_color_manual("", values = c("Made Shot" = "blue", "Missed Shot"= "orange"))
+  })
+  output$boxplot <- renderPlotly({
+    PacificShots <- SelectedPlayerReactive()
+     PacificShots <- filter(PacificShots, namePlayer == input$player_select,
+                         yearSeason %in% input$season_choice)
+    PacificShots %>% filter(typeEvent == "Made Shot") %>%
+    plot_ly(x= ~yearSeason, y = ~distanceShot, color = input$player_select, type = "box") %>% 
+      layout(showlegend = FALSE, title = "Made Shots Distance Distribution By Season")
+  })
+  output$barchart <- renderPlotly({
+    PacificShots <- SelectedPlayerReactive()
+    PacificShots <- filter(top5shots, namePlayer == input$player_select,
+                         yearSeason %in% input$season_choice)
+    ggplot(data = PacificShots, aes(x = typeShotAction_new, fill = yearSeason)) + geom_bar(position = "dodge") + ggtitle("Shot Type Distribution By Year") + xlab("Shot Type") + ylab("Count of Shot Type")
+  })
+}
+```
+
+```{r}
+shinyApp(ui = ui, server = server)
+#run
+```
+

@@ -1,0 +1,62 @@
+---
+title: "Project data"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+devtools::install_github("abresler/nbastatR", force = T)
+library(nbastatR)
+Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
+nba_teams() %>% filter(isNonNBATeam == 0)  ->  NBAteams
+```
+
+```{r}
+teams_shots(teams = c("Golden State Warriors","Phoenix Suns", "Los Angeles Lakers", "Sacramento Kings", "Los Angeles Clippers"), 
+seasons = 2018) -> Pacific2018
+
+teams_shots(teams = c("Golden State Warriors","Phoenix Suns", "Los Angeles Lakers", "Sacramento Kings", "Los Angeles Clippers"),
+seasons = 2019) -> Pacific2019
+
+teams_shots(teams = c("Golden State Warriors","Phoenix Suns", "Los Angeles Lakers", "Sacramento Kings", "Los Angeles Clippers"),
+seasons = 2020) -> Pacific2020
+
+
+      
+Pacific2018 %>% bind_rows(Pacific2019) %>% bind_rows(Pacific2020) -> PacificShots
+
+PacificShots$typeShotAction <- paste(PacificShots$typeShot,PacificShots$typeAction)
+
+#PacificShots should have 103417 obs of 27 variables, which just about maxes out how much data shiny can handle
+
+```
+
+```{r}
+#install.packages("tm")
+library(tm)
+
+stopwords = c("Field Goal")
+
+x = PacificShots$typeShotAction
+
+x = removeWords(x, stopwords)
+
+PacificShots$typeShotAction_new <- x
+
+```
+
+```{r}
+str(PacificShots)
+
+PacificShots$locationX_new <- (PacificShots$locationX / 10)
+  
+PacificShots$locationY_new <- (PacificShots$locationY / 10)
+
+write.csv(PacificShots, file = "PacificShots2.csv")
+
+```
+
+```{r}
+PacificShots %>% group_by(namePlayer) %>% summarise()
+```
+
