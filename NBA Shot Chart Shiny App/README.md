@@ -1,8 +1,8 @@
 # NBA Shot Chart Shiny App
 
-## I competed this project with Daniel Beim as a final assignment for the class "R for Sport Analytics"
+## This project was completed with Daniel Beim as a final assignment for the class "R for Sport Analytics"
 
-A few notes about the data:
+### A few notes about the data:
 
 •The final data file "PacificShots2.csv" was too large to fit in GitHub, but can be obtained by running the "SAL 413 Project Data Scrape.Rmd file" 
 
