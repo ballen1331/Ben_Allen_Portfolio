@@ -1,0 +1,370 @@
+```{r}
+library(rvest)
+library(tidyverse)
+library(lubridate)
+library(jsonlite)
+library(janitor)
+```
+
+```{r}
+#BEGINNING 2017
+url <- 'https://www.espn.com/golf/leaderboard/_/tournamentId/2718'
+webpage <- read_html(url)
+
+node_list <- webpage %>% 
+  html_nodes("table")
+
+leaderboard <- data.frame(node_list %>% 
+  html_table())
+
+library(rmarkdown)
+paged_table(leaderboard)
+
+webpage %>% 
+  html_nodes('optgroup') %>% 
+  html_nodes('option')
+```
+
+```{r}
+tournament_id_data <- webpage %>% 
+  html_nodes('optgroup') %>% 
+  html_nodes('option')
+
+#reg expression to pull id from tournament/player links
+grab_id <- "[[:digit:]]+" 
+
+#(?<=> looks behind >), .* matches everything except new lines, (?=</option) looks ahead to match </option
+grab_tournament_name <- "(?<=>).*(?=</option)" 
+grab_date <- "(?<=>).*(?=</span)"
+
+tournament_ids <- integer() #empty vector to pull tournament ids for season
+tournament_names <- character() ##empty vector to pull tournament names for season
+tournament_dates <- character()
+
+#loop id_data and grab tournament ids and names for individual seasons
+for(i in 1:length(tournament_id_data)){
+  to_string <- toString(tournament_id_data[i])
+  #tournament ids
+  tournament_id <- str_extract(to_string, grab_id)
+  tournament_ids <- c(tournament_ids, tournament_id)
+  
+  #tournament names
+  tournament_name <- str_extract(to_string, grab_tournament_name)
+  tournament_names <- c(tournament_names, tournament_name)
+  
+  #tournament dates
+  url <- paste0('https://www.espn.com/golf/leaderboard/_/tournamentId/', tournament_id)
+  webpage <- read_html(url)
+  tournament_date <- webpage %>% 
+    html_nodes('span.Leaderboard__Event__Date.n7') %>% 
+    toString() %>% 
+    str_extract(grab_date)
+  tournament_dates <- c(tournament_dates, tournament_date)
+  
+}
+
+tournaments <- data.frame(tournament_ids, tournament_names, tournament_dates)
+
+paged_table(tournaments)
+```
+
+```{r}
+remove_ids <- c("3070", "2721", "2720", "3069") #remove ids that won't work
+
+#Presidents Cup, Barracuda, Dell Match Play, Hero World
+
+tournament_ids <- tournament_ids[!tournament_ids %in% remove_ids]
+```
+
+```{r}
+#establish empty dataframe
+scores <- tibble(pos = numeric(),
+                 player = character(),
+                 to_par = numeric(),
+                 r1 = numeric(),
+                 r2 = numeric(),
+                 r3 = numeric(),
+                 r4 = numeric(),
+                 tot = numeric(),
+                 earnings = numeric(),
+                 fedex_pts = numeric())
+
+for( t in 1:length(tournament_ids)){
+  
+  url <- paste0('https://www.espn.com/golf/leaderboard/_/tournamentId/', tournament_ids[t])
+  webpage <- read_html(url)
+  
+  id_data <- html_nodes(webpage, 'a.AnchorLink.leaderboard_player_name') #links with player ids
+  
+  grab_id <- "[[:digit:]]+" #reg expression to pull id from player links
+  ids <- integer() #empty vector to put player ids
+  
+  #loop id_data and grab only player ids
+  for(i in 1:length(id_data)){
+    to_string <- toString(id_data[i])
+    id <- str_extract(to_string, grab_id)
+    ids <- c(ids, id)
+  }
+  
+  
+  node_list <- webpage %>% 
+    html_nodes("table")
+  
+  if(length(node_list) == 1){
+    leaderboard <- node_list %>% 
+      html_table(fill = TRUE) %>% 
+      .[[1]] %>% 
+      clean_names() %>% 
+      mutate(player_id = ids)
+  } else if(length(node_list) == 2) {
+    leaderboard <- node_list %>% 
+      .[2] %>% 
+      html_table(fill = TRUE) %>% 
+      .[[1]] %>% 
+      clean_names() %>% 
+      mutate(player_id = ids)
+  } else {
+    leaderboard <- tibble(pos = numeric(),
+                 player = character(),
+                 to_par = numeric(),
+                 r1 = numeric(),
+                 r2 = numeric(),
+                 r3 = numeric(),
+                 r4 = numeric(),
+                 tot = numeric(),
+                 earnings = numeric(),
+                 fedex_pts = numeric(),
+                 player_id = character())
+  }
+  leaderboard <- leaderboard %>% 
+    mutate(tournament_id = tournament_ids[t])
+  
+  scores <- rbind(scores, leaderboard)
+}
+#This gives us what we need for the 2017-18 season
+paged_table(scores) -> scores2017
+
+#END 2017
+```
+
+```{r}
+tournaments$tournament_ids -> tournaments$tournament_id
+
+tournaments <- subset(tournaments, select = -(tournament_ids))
+
+scores2017 <- merge(scores2017, tournaments, by = "tournament_id")
+
+scores2017$score <- as.numeric(scores2017$score)
+scores2017$r1 <- as.numeric(scores2017$r1)
+scores2017$r2 <- as.numeric(scores2017$r2)
+scores2017$r3 <- as.numeric(scores2017$r3)
+scores2017$r4 <- as.numeric(scores2017$r4)
+scores2017$tot <- as.numeric(scores2017$tot)
+
+str(scores2017)
+
+scores2017$EnteringR4 <- scores2017$tot - scores2017$r4
+
+scores2017$EnteringR3 <- scores2017$EnteringR4 - scores2017$r3
+
+
+```
+
+```{r}
+#group by tournament id, summarise difference between lowest and 2nd lowest value for each
+
+MarginDF <- scores2017 %>% 
+   group_by(tournament_id) %>% 
+   slice_min(order_by = EnteringR4)
+
+#this gives the row of every player/players who Entered R4 with the lead
+```
+
+
+```{r}
+#Search for leader before 3rd and 4th round
+Leader_R3 <- scores2017 %>% 
+  group_by(tournament_id) %>%
+  summarise(Leader_enter_R3 = min(EnteringR3))
+```
+
+```{r}
+#BEGINNING 2021
+url <- 'https://www.espn.com/golf/leaderboard/_/tournamentId/401243403'
+webpage <- read_html(url)
+
+node_list <- webpage %>% 
+  html_nodes("table")
+
+leaderboard <- data.frame(node_list %>% 
+  html_table())
+
+library(rmarkdown)
+paged_table(leaderboard)
+
+webpage %>% 
+  html_nodes('optgroup') %>% 
+  html_nodes('option')
+```
+
+```{r}
+tournament_id_data <- webpage %>% 
+  html_nodes('optgroup') %>% 
+  html_nodes('option')
+
+#reg expression to pull id from tournament/player links
+grab_id <- "[[:digit:]]+" 
+
+#(?<=> looks behind >), .* matches everything except new lines, (?=</option) looks ahead to match </option
+grab_tournament_name <- "(?<=>).*(?=</option)" 
+grab_date <- "(?<=>).*(?=</span)"
+
+tournament_ids <- integer() #empty vector to pull tournament ids for season
+tournament_names <- character() ##empty vector to pull tournament names for season
+tournament_dates <- character()
+
+#loop id_data and grab tournament ids and names for individual seasons
+for(i in 1:length(tournament_id_data)){
+  to_string <- toString(tournament_id_data[i])
+  #tournament ids
+  tournament_id <- str_extract(to_string, grab_id)
+  tournament_ids <- c(tournament_ids, tournament_id)
+  
+  #tournament names
+  tournament_name <- str_extract(to_string, grab_tournament_name)
+  tournament_names <- c(tournament_names, tournament_name)
+  
+  #tournament dates
+  url <- paste0('https://www.espn.com/golf/leaderboard/_/tournamentId/', tournament_id)
+  webpage <- read_html(url)
+  tournament_date <- webpage %>% 
+    html_nodes('span.Leaderboard__Event__Date.n7') %>% 
+    toString() %>% 
+    str_extract(grab_date)
+  tournament_dates <- c(tournament_dates, tournament_date)
+  
+}
+
+tournaments <- data.frame(tournament_ids, tournament_names, tournament_dates)
+
+paged_table(tournaments)
+```
+
+```{r}
+remove_ids <- c("401243402", "401330868", "401251634", "401268081", "401243406", "401243007") #remove ids that won't work
+
+#Tour champ, the match, the match again, hero world challenge, barracuda, Dell Match 
+
+tournament_ids <- tournament_ids[!tournament_ids %in% remove_ids]
+```
+
+```{r}
+#establish empty dataframe
+scores <- tibble(pos = numeric(),
+                 player = character(),
+                 to_par = numeric(),
+                 r1 = numeric(),
+                 r2 = numeric(),
+                 r3 = numeric(),
+                 r4 = numeric(),
+                 tot = numeric(),
+                 earnings = numeric(),
+                 fedex_pts = numeric())
+
+for( t in 1:length(tournament_ids)){
+  
+  url <- paste0('https://www.espn.com/golf/leaderboard/_/tournamentId/', tournament_ids[t])
+  webpage <- read_html(url)
+  
+  id_data <- html_nodes(webpage, 'a.AnchorLink.leaderboard_player_name') #links with player ids
+  
+  grab_id <- "[[:digit:]]+" #reg expression to pull id from player links
+  ids <- integer() #empty vector to put player ids
+  
+  #loop id_data and grab only player ids
+  for(i in 1:length(id_data)){
+    to_string <- toString(id_data[i])
+    id <- str_extract(to_string, grab_id)
+    ids <- c(ids, id)
+  }
+  
+  
+  node_list <- webpage %>% 
+    html_nodes("table")
+  
+  if(length(node_list) == 1){
+    leaderboard <- node_list %>% 
+      html_table(fill = TRUE) %>% 
+      .[[1]] %>% 
+      clean_names() %>% 
+      mutate(player_id = ids)
+  } else if(length(node_list) == 2) {
+    leaderboard <- node_list %>% 
+      .[2] %>% 
+      html_table(fill = TRUE) %>% 
+      .[[1]] %>% 
+      clean_names() %>% 
+      mutate(player_id = ids)
+  } else {
+    leaderboard <- tibble(pos = numeric(),
+                 player = character(),
+                 to_par = numeric(),
+                 r1 = numeric(),
+                 r2 = numeric(),
+                 r3 = numeric(),
+                 r4 = numeric(),
+                 tot = numeric(),
+                 earnings = numeric(),
+                 fedex_pts = numeric(),
+                 player_id = character())
+  }
+  leaderboard <- leaderboard %>% 
+    mutate(tournament_id = tournament_ids[t])
+  
+  scores <- rbind(scores, leaderboard)
+}
+#This gives us what we need for the 2020-21 season
+paged_table(scores) -> scores2021
+
+#END 2021
+```
+
+```{r}
+tournaments$tournament_ids -> tournaments$tournament_id
+
+tournaments <- subset(tournaments, select = -(tournament_ids))
+
+scores2021 <- merge(scores2021, tournaments, by = "tournament_id")
+
+scores2021$r1 <- as.numeric(scores2021$r1)
+scores2021$r2 <- as.numeric(scores2021$r2)
+scores2021$r3 <- as.numeric(scores2021$r3)
+scores2021$r4 <- as.numeric(scores2021$r4)
+scores2021$tot <- as.numeric(scores2021$tot)
+
+str(scores2021)
+
+scores2021$EnteringR4 <- scores2021$tot - scores2021$r4
+
+scores2021$EnteringR3 <- scores2021$EnteringR4 - scores2021$r3
+
+
+```
+
+```{r}
+#group by tournament id, eventually summarise difference between lowest and 2nd lowest value for each
+
+#this gives the row of every player/players who Entered R4 with the lead
+MarginDF <- scores2021 %>% 
+   group_by(tournament_id) %>% 
+   slice_min(order_by = EnteringR4)
+
+
+#This is the same thing but top 15 for each tourney
+MarginDF2 <- scores2021 %>% 
+   group_by(tournament_id) %>% 
+   slice_min(order_by = EnteringR4, n = 15)
+
+```
+
+
