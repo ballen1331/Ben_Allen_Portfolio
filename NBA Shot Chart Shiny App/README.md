@@ -15,8 +15,11 @@
 ### A few notes about the app:
 
 • A link to the app is here: (https://danielbeim.shinyapps.io/SAL413FinalProject/)
+
 • In the top left, choose a player you want to analyze 
+
 • Upon selecting, the player's 2018 shot chart (made / missed shots) will pop up in the top right along with a plotly distribution of the player's made
 shots and a ggplot2 bar graph of the shot type distribution.
+
 • All three visuals will dynamically update based years chosen in the "Select Season" input (type in 2019 to add the player's 2019 data to the graphics)
 
