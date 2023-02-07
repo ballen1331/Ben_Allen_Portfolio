@@ -14,9 +14,9 @@
 
 • Begin by cleaning data in R, before summarizing key attributes (See: "SumStats2.pdf")
 
-• Perform exploratory SG analysis on individual golfers to examine strokes gained makeup over time and get to know the data even more. I chose to do this with Jon Rahm, creating relevant plots in R (ggplot2) that detail his SG performance by round / tournament throughout the time period (See: Poster_Final.pdf and Poster_Graphics.Rmd)
+• Perform exploratory SG analysis on individual golfers to examine strokes gained makeup over time and get to know the data even more. I chose to do this with world number 1 Jon Rahm, creating relevant plots in R (ggplot2) that detail his SG performance by round / tournament throughout the time period (See: Poster_Final.pdf, TrackingRahm.pdf, and Poster_Graphics.Rmd) for blog style write up and poster. 
 
-• From there, I began modeling the strokes gained segments with various Strokes Gained predictors (SG Total, SG Putting, SG Around the Green, SG Approach, SG Off the Tee)
+• From there, I began modeling my dependent variable ~ Winning the Golf Tournament ~ through logistic regression with various Strokes Gained predictors (SG Total, SG Putting, SG Around the Green, SG Approach, SG Off the Tee)
 
 • The final logistic regression provided evidence in support of Strokes Gained Off the Tee and Strokes Gained Approach as the SG categories that have the highest value as they pertain to influence on winning a golf tournament. In other words, a stroke gained driving is more valuable than a stroke gained putting or around the green.
 
