@@ -1,6 +1,6 @@
 # Example Catching Report
 
-## Reason for Completion: Served as intial R&D report sent to the coaching staff of VCU Baseball to be presented to players
+## Reason for Completion: Served as initial R&D report sent to the coaching staff of VCU Baseball to be presented to players
 
 ### A few notes about the data
 
