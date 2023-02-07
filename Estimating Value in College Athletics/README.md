@@ -6,7 +6,9 @@
 
 • Dataset of 1073 individual college football seasons for power 5 teams (2006-2015), with attributes about recruiting, future NFL draft status, scheduling, team points, and entertainment scores, seeking to gain insight into the factors that influence financial success of a college football program
 
-• Specifically, the goal is to isolate the recruiting and NFL draft metrics in an attempt to quantify the monetary equivalent of an elite college football player 
+• Specifically, the goal is to isolate the recruiting and NFL draft metrics in an attempt to quantify the monetary equivalent of an elite college football player
+
+• Only 2015 data was used in this analysis
 
 ### Model Results and Conclusions:
 
