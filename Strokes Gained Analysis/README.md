@@ -20,9 +20,9 @@
 
 • The final logistic regression provided evidence in support of Strokes Gained Off the Tee and Strokes Gained Approach as the SG categories that have the highest value as they pertain to influence on winning a golf tournament. In other words, a stroke gained driving is more valuable than a stroke gained putting or around the green.
 
-• After that, I wanted to see if I could group or cluster the golfers in my dataset by strokes gained makeup, as to identify players by strength (i.e Bryson DeChambeau being an Off the tee dominant player vs Denny McCarthy. being a short game dominant player)
+• After that, I wanted to see if I could group or cluster the golfers in my dataset by strokes gained makeup, as to identify players by strength (i.e Bryson DeChambeau being an off the tee dominant player vs Denny McCarthy being a short game dominant player)
 
 • Upon performing this cluster analysis, I was able to parse through any individual golfer on the Factor Map (See: cluster.pdf) and identify those who are more likely to perform better in the future based on consistent, ball-striking attributes. 
 
-• A final poster detailing my process and conclusions in more detail is shown on "Allen_Poster.pdf"
+• A final poster detailing my process and conclusions in more detail is shown on "Allen_Poster.pdf" and the final research paper can be downloaded under "Thesis Honors Final.docx"
 
