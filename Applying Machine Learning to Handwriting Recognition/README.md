@@ -6,9 +6,9 @@
 
 ### A few notes about the project:
 
-• 4198 observations of 785 variables with 'pixel' variables used to predict handwriting samples in a variety of contexts
+• CSVs (digit_train and digit_test) with 4198 observations of 785 instances were used to test handwriting recognition accuracy using 'pixel' attributes of handwriting samples
 
-• Accuracy of .9212 for kNN, .9026 for SVM, and .9266 for Random Forest all tested with 5 fold cross-validation
+• Using applicable packages in R, these models produced accuracies of .9212 for kNN, .9026 for SVM, and .9266 for Random Forest all tested with 10 repetitions of 5 fold cross-validation
 
 • Based on the accuracy results and runtime, the Random Forest option performed best in predicting this type of pixelated handwriting data
 
