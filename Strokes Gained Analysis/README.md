@@ -1,6 +1,6 @@
 # Strokes Gained Analysis of Professional Golfers
 
-## This file details most of the work I completed as part of my Senior Thesis Project "Drive For Dough? A Strokes Gained Analysis of Professional Golfers"
+## This project details most of the work I completed as part of my Senior Thesis Project "Drive For Dough? A Strokes Gained Analysis of Professional Golfers"
 
 ### A few notes about the data
 
