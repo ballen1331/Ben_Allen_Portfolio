@@ -24,5 +24,5 @@
 
 • Upon performing this cluster analysis, I was able to parse through any individual golfer on the Factor Map (See: cluster.pdf) and identify those who are more likely to perform better in the future based on consistent, ball-striking attributes. 
 
-• A final poster detailing my process and conclusions in more detail is shown on "Allen Poster.pdf"
+• A final poster detailing my process and conclusions in more detail is shown on "Allen_Poster.pdf"
 
