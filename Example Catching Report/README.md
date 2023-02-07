@@ -1,6 +1,6 @@
 # Example Catching Report
 
-## This project served as an intial catching report sent to the coaching staff of VCU Baseball
+## Reason for Completion: Served as intial R&D report sent to the coaching staff of VCU Baseball to be presented to players
 
 ### A few notes about the data
 
