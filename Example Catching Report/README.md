@@ -8,7 +8,7 @@
 
 • These catching variables were used to create the strike zone plots, predicted strike characteristcs, and summary tables shown in "Group1CatchingReportUpdated.pdf"
 
-### A walkthrough of the report
+### A walkthrough of the report: 
 
 • Plot 1: Ball and Strike pitch results measured throughout the strike zone (strike zone created as geom object in R)
 
