@@ -1,5 +1,5 @@
-### Scraping ESPN Leaderboard
+# Scraping ESPN Leaderboards
 
-## This outside research project was completed to advance my web scraping skills in rvest, while also finding a way to acquire more golf data for subsequent analysis
+## This outside research project was completed to advance my web scraping skills in rvest, while also increasing warchest of golf data
 
-#
+### 
