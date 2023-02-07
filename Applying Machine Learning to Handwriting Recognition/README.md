@@ -1,6 +1,6 @@
 # Handwriting Recognition in R (kNN, SVM, and Random Forest Modeling)
 
-## Reason for Completion: Class assignment for IST 707: Applied Machine Learning
+## Reason for Completion: Class assignment for IST 707 (Applied Machine Learning)
 
 ### A few notes about the project:
 
